@@ -1,0 +1,63 @@
+       ORG     0x7c00  
+       ; Format of floppy disk in fat12
+    JMP     entry           ; JMP跳转指令，跳转到目标内存地址
+                            ; 注意1 这列的跳转指的是计算机执行时候的跳转，而不是汇编的时候跳转
+                            ; 注意2 entry表示entry代码段在内存中的起始位置
+    DB      0x90            ; DB，DD和DW分别是向镜像中写单字节，双字节和四字节
+    DB      "MyOS IPL"      ; 写入启动区名字，必须是8字节
+    DW      512             ; 启动扇区大小512字节
+    DB      1               ; 1个簇大小是1个扇区
+    DW      1               ; FAT从第一个扇区启动
+    DB      2               ; FAT个数为2个
+    DW      224             ; 根目录大小224
+    DW      2880            ; 磁盘包含2880个扇区
+    DB      0xf0            ; 磁盘种类必须为0xf0
+    DW      9               ; FAT长度为9扇区
+    DW      18              ; 1个磁道18个扇区
+    DW      2               ; 2个磁头
+    DD      0               ; 不使用分区
+    DD      2880            ; 同上，磁盘大小
+    DB      0, 0, 0x29      ; 无意义，固定这么写
+    DD      0xffffffff      ; 无意义，固定这么写
+    DB      "MyOS       "   ; 磁盘名，11字节
+    DB      "FAT12   "      ; 磁盘格式名，8字节
+    RESB    18              ; 空18个字节，填充0x00   
+    ; Boot kernel
+entry:
+    ; Init register
+    MOV     AX, 0
+    MOV     SS, AX
+    MOV     SP, 0x7c00
+    MOV     DS, AX
+    MOV     ES, AX
+    MOV     SI, msg   
+    ; Loop: print string with interrupt
+print:
+    MOV     AL, [SI]
+    ADD     SI, 1
+    CMP     AL, 0
+    JE      end
+    MOV     AH, 0x0e
+    MOV     BX, 15
+    INT     0x10
+    JMP     print
+    ; Wait
+end:
+    HLT
+    JMP     end
+    ; msg
+msg:
+    DB      0x0a, 0x0a, 0x0a
+    DB      "Hello,world!"
+    DB      0x0a
+    DB      0
+    ; Boot end
+    TIMES   510 - ($ - $$) DB 0
+    DB      0x55, 0xaa
+    ; Output outside booting section
+    DB      0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
+    RESB    4600
+    DB      0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
+    RESB    1468432
+                   
+                  
