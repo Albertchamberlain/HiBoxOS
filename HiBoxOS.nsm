@@ -48,7 +48,7 @@ end:
     ; msg
 msg:
     DB      0x0a, 0x0a, 0x0a
-    DB      "Hello,world!"
+    DB      "Hello,world!I am HiBoxOS"
     DB      0x0a
     DB      0
     ; Boot end
